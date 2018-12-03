@@ -11,19 +11,21 @@ from scipy.stats import levene
 from scipy.stats import normaltest
 
 """USEFUL VARIABLES"""
-###DO NOT TOUCH###
+###DO NOT TOUCH
 CorrectResponse = 'C'
-ErrorResponse = 'E'
-DesiredErrorRate = 85
+IncorrectResponse = 'E'
+DesiredError = 85
+RawData = []
 TrialTag = ['yes\n', 'no\n']
 HeaderTag = 'Participant'
 SubHeaderTag = 'Name'
-RawData = []
+NoReponseTag = 'NR'
+Alpha = .05
 ###DO NOT TOUCH###
 
 """MAIN SCRIPT"""
-# Set file paths and import desired files
-Path = 'H:\\University of Roehampton\\Small grant GPs\\Experiments\\Session 4 Faces\\Experiment\\Data'
+# Set dir and import files
+Path = 'H:\\University of Roehampton\\Small grant GPs\\Experiments\\Session 2 1D\\Experiment\\Data\\'
 Files = os.listdir(Path)
 DataFiles = []
 
@@ -31,11 +33,10 @@ for f in Files:
     if f.endswith('.txt'):
         DataFiles.append(f)
 
-# Import data from required files    
+# Open files and import data into variables
 for f in DataFiles:
-    f = os.path.join(Path, f)
-    Data = open(f, 'r')
-    
+    File = os.path.join(Path, f)
+    Data = open(File, 'r')
     # Filters imported data into different variables    
     for line in Data.readlines():
         if line.endswith(TrialTag[0]) or line.endswith(TrialTag[1]):
@@ -50,7 +51,7 @@ for f in DataFiles:
 # Reset and close file    
     Data.seek(0)
     Data.close
-
+    
 # Convert strings to lists 
 RawData = [line.splitlines() for line in RawData]
 RawData = [cell.split('\t') for line in RawData for cell in line]
@@ -71,21 +72,46 @@ for a in SubHeader[0][12:]:
 RawData.insert(0, NewHeader)
 del Header, SubHeader
 
-# Remove header for ease of analysis
+# Convert Raw Data into np array 
+# and export RawData as csv
+os.chdir(Path)
+CsvOutput = np.asarray(RawData)
+with open('RawData.csv', 'wb') as f:
+    writer = csv.writer(f)
+    writer.writerows(RawData)
+
+# Remove Header and no response trils for analysis
 RawData.pop(0)
+RawData = [line for line in RawData if line[10] != NoReponseTag]
 
 """Testing Distributions"""
 
-# Pull data and adjust to required dtype
-Ratings = np.asarray(RawData)
-Ratings = Ratings[:,6]
-Ratings = np.asarray(Ratings, dtype=float)
-# Display mean and std of all ratings
-print('mean=%.3f stdv=%.3f' % (mean(Ratings), std(Ratings)))
+# Pull required data and adjust dtype
+RTs = np.asarray(RawData)
+RTs = RTs[:,11]
+RTs = np.asarray(RTs, dtype=float)
+print('mean=%.3f stdv=%.3f' % (mean(RTs), std(RTs)))
 
-# Plot Histogram of ratings
-plt.hist(Ratings)
+# Plot hist and qq of RTs then run homogineity tests
+plt.hist(RTs)
+plt.show()
+qqplot(RTs, line='s')
 plt.show()
 
-### Calclate mean attractiveness rating for each trial type ###
-### and export in a format that can be copied into SPSS file ###
+# Shapiro test of homogeneity
+stat, p = shapiro(RTs)
+print('Statistics=%.3f, p=%.3f' % (stat, p))
+if p > Alpha:
+	print('Sample looks Gaussian')
+else:
+	print('Sample does not look Gaussian')
+    
+# K2 test for skewness and kurtosis
+stat, p = normaltest(RTs)
+print('Statistics=%.3f, p=%.3f' % (stat, p))
+if p > Alpha:
+	print('Sample looks Gaussian')
+else:
+	print('Sample does not look Gaussian')
+
+"""Main Analysis"""
