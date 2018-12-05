@@ -1,3 +1,5 @@
+###############################################################################
+
 """IMPORTS"""
 import os
 import matplotlib.pyplot as plt
@@ -21,13 +23,17 @@ RawData = []
 TrialTag = 'Main Group'
 HeaderTag = 'Participant'
 SubHeaderTag = 'Group'
+NoReponseTag = 'NR'
 Alpha = .05
+Conditions = ['GP Short', 'GP Long', 'NonGP Short', 'NonGP Long']
 ###DO NOT TOUCH###
 
-"""MAIN SCRIPT"""
+###############################################################################
+
+"""MAIN SCRIPT""" 
 # Set dir and desired import files
 # Insert required path
-Path = 'H:\\University of Roehampton\\Small grant GPs\\Experiments\\Session 1 GP13\\Experiment\\Data\\'
+Path = 'C:\\Users\\Finbar.Duffy\\Desktop\\Fin experiments\\Session 1 GP13\\Experiment\\Data'
 Files = [os.listdir(Path)]
 DataFiles = []
 
@@ -73,72 +79,79 @@ for a in SubHeader[0][12:]:
 
 RawData.insert(0, NewHeader)
 del Header, SubHeader
-    
+
 # Export and save rawdata set as excel worksheet
-os.chdir(Path)
-CsvOutput = np.asarray(RawData)
-with open('RawData.csv', 'wb') as f:
+os.chdir(Path) 
+with open('RawData_Exp1.csv', 'w', newline='') as f:
     writer = csv.writer(f)
-    writer.writerows(CsvOutput)
+    writer.writerows(RawData)
 
 # Pop Header and no responses for analysis
 RawData.pop(0)    
+RawData = [line for line in RawData if line[10] != NoReponseTag]
 
 """Testing Distributions"""
-
 # Pull data and adjust to required dtype
 RTs = np.asarray(RawData)
 RTs = RTs[:,11]
 RTs = np.asarray(RTs, dtype=float)
 # Display mean and std of all RTs
-print('mean=%.3f stdv=%.3f' % (mean(RTs), std(RTs)))
+print('Overall RTs: mean=%.3f stdv=%.3f' % (mean(RTs), std(RTs)))
 
-# Plot hist and qq of RTs then run homogineity tests
+# Plot hist and qq of RTs
 plt.hist(RTs)
 plt.show()
 qqplot(RTs, line='s')
 plt.show()
 
-# Shapiro test of homogeneity
-stat, p = shapiro(RTs)
-print('Statistics=%.3f, p=%.3f' % (stat, p))
-if p > Alpha:
-	print('Sample looks Gaussian')
-else:
-	print('Sample does not look Gaussian')
-    
 # K2 test for skewness and kurtosis
+print ('Testing skewness & kurtosis')
 stat, p = normaltest(RTs)
-print('Statistics=%.3f, p=%.3f' % (stat, p))
+print('K2 Statistics=%.3f, p=%.3f' % (stat, p))
 if p > Alpha:
-	print('Sample looks Gaussian')
+	print('Sample Gaussian')
 else:
-	print('Sample does not look Gaussian')
+	print('Sample not Gaussian')
 
-# Split data into GP/non-GP data sets and reduce to acc + error values
-GPData = [row for row in RawData if row[13] == 'GP']
-nonGPData = [row for row in RawData if row[13] == 'non-GP']
-GPRTs = [row[11] for row in GPData]
-nonGPRTs = [row[11] for row in nonGPData]
-GPRTs = np.asarray(GPRTs, float)
-nonGPRTs = np.asarray(nonGPRTs,float)
+# Log transform RTs
+logRTs = RTs
+np.log(RTs, out=logRTs)
+
+# qq plot log transformed RTs
+print ('qq plot of log transformed RTs:')
+qqplot(logRTs, line='s')
+plt.show()
+
+"""Main Anlayisis"""
+
+# Split data into conditions and reduce to RT & error values
+GPShortRTs = [row[11] for row in RawData if row[13]=='GP' and row[12]=='750']
+GPLongRTs = [row[11] for row in RawData if row[13]=='GP' and row[12]=='1500']
+nonGPShortRTs = [row[11] for row in RawData if row[13]=='non-GP' and row[12]=='750']
+nonGPLongRTs = [row[11] for row in RawData if row[13]=='non-GP' and row[12]=='1500']
+GPShortRTs = np.asarray(GPShortRTs, dtype=float)
+GPLongRTs = np.asarray(GPLongRTs, dtype=float)
+nonGPShortRTs = np.asarray(nonGPShortRTs, dtype=float)
+nonGPLongRTs = np.asarray(nonGPLongRTs, dtype=float)
+
+# Plot RT means  and stds
+ConditionRTstds = [std(GPShortRTs), std(GPLongRTs), std(nonGPShortRTs), std(nonGPLongRTs)]
+ConditionRTMeans = [mean(GPShortRTs), mean(GPLongRTs), mean(nonGPShortRTs), mean(nonGPLongRTs)]
+plt.bar(Conditions, ConditionRTMeans, yerr=ConditionRTstds)
+plt.xlabel('Condition')
+plt.ylabel('RT Means')
+plt.show()
+
+# Print RT means and stds for each condition
+print('GP Short: mean=%.3f stdv=%.3f' % (mean(GPShortRTs), std(GPShortRTs)))
+print('GP Long: mean=%.3f stdv=%.3f' % (mean(GPLongRTs), std(GPLongRTs)))
+print('nonGP Short: mean=%.3f stdv=%.3f' % (mean(nonGPShortRTs), std(nonGPShortRTs)))
+print('nonGP Long: mean=%.3f stdv=%.3f' % (mean(nonGPLongRTs), std(nonGPLongRTs)))
 
 # Levene's test for homogeneity
-stat, p = levene(GPRTs, nonGPRTs)
-print('Statistics=%.3f, p=%.3f' % (stat, p))
+stat, p = levene(GPShortRTs, GPLongRTs, nonGPShortRTs, nonGPLongRTs)
+print('Levene Statistics=%.3f, p=%.3f' % (stat, p))
 if p > Alpha:
 	print('Sample looks Gaussian')
 else:
 	print('Sample does not look Gaussian')
-
-# Calculate and store error rate
-
-"""Main Analysis"""
-
-# Calculate and store means
-GPRTMean = np.mean(GPRTs)
-nonGPRTMean = np.mean(nonGPRTs)
-print ("GP Mean RT: %.3f" % (GPRTMean))
-print ("non GP MEan RT: %.3f" % (nonGPRTMean))
-
-"""Plotting Main Analysis"""

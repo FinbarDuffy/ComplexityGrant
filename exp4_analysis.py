@@ -23,7 +23,7 @@ RawData = []
 
 """MAIN SCRIPT"""
 # Set file paths and import desired files
-Path = 'H:\\University of Roehampton\\Small grant GPs\\Experiments\\Session 4 Faces\\Experiment\\Data'
+Path = 'C:\\Users\\Finbar.Duffy\\Desktop\\Fin experiments\\Session 4 Faces\\Experiment\\Data\\'
 Files = os.listdir(Path)
 DataFiles = []
 
@@ -70,6 +70,12 @@ for a in SubHeader[0][12:]:
 
 RawData.insert(0, NewHeader)
 del Header, SubHeader
+
+# Export RawData as csv
+os.chdir(Path)
+with open('RawData_Exp4.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerows(RawData)
 
 # Remove header for ease of analysis
 RawData.pop(0)

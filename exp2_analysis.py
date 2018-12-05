@@ -25,7 +25,7 @@ Alpha = .05
 
 """MAIN SCRIPT"""
 # Set dir and import files
-Path = 'H:\\University of Roehampton\\Small grant GPs\\Experiments\\Session 2 1D\\Experiment\\Data\\'
+Path = 'C:\\Users\\Finbar.Duffy\\Desktop\\Fin experiments\\Session 2 1D\\Experiment\\Data\\'
 Files = os.listdir(Path)
 DataFiles = []
 
@@ -75,8 +75,7 @@ del Header, SubHeader
 # Convert Raw Data into np array 
 # and export RawData as csv
 os.chdir(Path)
-CsvOutput = np.asarray(RawData)
-with open('RawData.csv', 'wb') as f:
+with open('RawData_Exp2.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerows(RawData)
 

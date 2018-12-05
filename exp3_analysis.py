@@ -24,7 +24,7 @@ TrialTag = ['yes\n', 'no\n']
 
 """MAIN SCRIPT"""
 # Set file paths and import files
-Path = 'H:\\University of Roehampton\\Small grant GPs\\Experiments\\Session 3 2D\\Data\\' 
+Path = 'C:\\Users\\Finbar.Duffy\\Desktop\\Fin experiments\\Session 3 2D\\Data' 
 Files = os.listdir(Path)
 DataFiles = []
 
@@ -72,13 +72,11 @@ for a in SubHeader[0][12:]:
 RawData.insert(0, NewHeader)
 del Header, SubHeader
 
-# Convert Raw Data into np array 
-# and export RawData as csv
-#os.chdir(Path)
-#CsvOutput = np.asarray(RawData)
-#with open('RawData.csv', 'wb') as f:
-#    writer = csv.writer(f)
-#    writer.writerows(CsvOutput)
+# Export RawData as csv
+os.chdir(Path)
+with open('RawData_Exp3.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerows(RawData)
 
 # Remove header for ease of analysis
 RawData.pop(0)
